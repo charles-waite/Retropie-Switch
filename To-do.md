@@ -46,4 +46,13 @@ To-do:
 
 - [ ] Setup Backlight control script and test with Joycons.
 
-- [ ] 
+- [x] Create Github Repo
+
+- [ ] Create installer/setup script
+
+  - [ ] Creates and registers system services and runs them at boot
+  - [ ] Links services to correct locations (would be /home/pi/*REPO-NAME*)
+  - [ ] installs scripts to correct directories
+  - [ ] Create update script that pulls new scripts and restarts systemctl and services
+
+- [ ] Refactor script to use Adafruit python libraries (since ChatGPT keeps fucking up the registers and forgetting functionality)
