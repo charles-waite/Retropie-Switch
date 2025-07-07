@@ -1,0 +1,22 @@
+[Unit]
+Description=RetroPie Volume & Backlight Control
+After=multi-user.target sound.target
+
+[Service]
+Type=simple
+User=pi
+# If your script requires GPIO and I2C, give it access to those subsystems:
+# Add these lines if you run into permission errors:
+# CapabilityBoundingSet=CAP_SYS_RAWIO
+# Environment=PYTHONUNBUFFERED=1
+
+WorkingDirectory=/home/pi
+ExecStart=/usr/bin/env python3 /home/pi/volume_backlight_control.py
+Restart=on-failure
+RestartSec=5s
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=vol-backlight
+
+[Install]
+WantedBy=multi-user.target

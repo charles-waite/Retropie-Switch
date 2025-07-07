@@ -12,29 +12,77 @@ SHDN_GPIO = 16         # TEMP: GPIO for TPA2016 SHDN pin (set back to 22 later)
 JACK_SWITCH_GPIO = 23  # GPIO for headphone jack detect switch
 DEBOUNCE_TIME = 0.05   # 50ms polling debounce
 
-# TPA2016 I2C Settings
+# TPA2016 REGISTER MAP (Corrected)
+GAIN_REGISTER = 0x05        # Fixed gain setting
+CONFIG_REGISTER = 0x01      # Software shutdown
+COMPRESS_REGISTER = 0x07    # Max gain (7:4), Compression (1:0)
+
+SOFTWARE_SHUTDOWN_BIT = 1 << 5  # Bit 5 in register 0x01
+
+# Compression settings
+COMPRESSION_1TO1 = 0x00  # bits 1:0 = 00
+COMPRESSION_4TO1 = 0x02  # bits 1:0 = 10
+
+# Default (reset) value of COMPRESS_REGISTER: 0xC0 (max gain 30dB, 1:1)
+DEFAULT_MAXGAIN_BITS = 0b1100  # bits 7:4
+
+# Other settings
 I2C_BUS = 1
 TPA2016_I2C_ADDR = 0x58
-GAIN_REGISTER = 0x04
-AGC_ENABLE_REGISTER = 0x06
-CONFIG_REGISTER = 0x01
-SOFTWARE_SHUTDOWN_BIT = 1 << 5  # Bit 5 (correct for SWS)
-FIXED_GAIN_DB = 0  # 0 dB, set as desired (-28 to +30 dB)
+FIXED_GAIN_DB = 0  # Set your preferred default gain here (-28 to +30 dB)
+
+# ========== GLOBALS ==========
+current_gain_db = FIXED_GAIN_DB
+compression_setting = COMPRESSION_1TO1  # Start at 1:1
 
 # ========== TPA2016 CONTROL ==========
 def db_to_regval(db):
     db = max(-28, min(30, db))
     return int(db + 28)
 
+def set_fixed_gain_db(db):
+    global current_gain_db
+    db = max(-28, min(30, db))
+    current_gain_db = db
+    with SMBus(I2C_BUS) as bus:
+        gain_value = db_to_regval(db)
+        bus.write_byte_data(TPA2016_I2C_ADDR, GAIN_REGISTER, gain_value)
+        time.sleep(0.05)  # short pause
+        readback = bus.read_byte_data(TPA2016_I2C_ADDR, GAIN_REGISTER)
+    print(f"Set gain to {db} dB (wrote 0x{gain_value:02X}), read back 0x{readback:02X}")
+    if readback != gain_value:
+        print("WARNING: Register readback does not match written value!")
+
+def set_compression_ratio(new_ratio_value):
+    global compression_setting
+    with SMBus(I2C_BUS) as bus:
+        val = bus.read_byte_data(TPA2016_I2C_ADDR, COMPRESS_REGISTER)
+        val_new = (val & 0xFC) | (new_ratio_value & 0x03)
+        bus.write_byte_data(TPA2016_I2C_ADDR, COMPRESS_REGISTER, val_new)
+        time.sleep(0.05)
+        readback = bus.read_byte_data(TPA2016_I2C_ADDR, COMPRESS_REGISTER)
+    compression_setting = new_ratio_value
+    ratio_map = {0: "1:1", 1: "2:1", 2: "4:1", 3: "8:1"}
+    print(f"Set compression to {ratio_map.get(new_ratio_value, '?')} (wrote 0x{val_new:02X}), read back 0x{readback:02X}")
+
+def toggle_compression():
+    # 0 = 1:1, 2 = 4:1
+    set_compression_ratio(2 if compression_setting == 0 else 0)
+
+def get_current_compression_label():
+    ratio_map = {0: "1:1", 1: "2:1", 2: "4:1", 3: "8:1"}
+    return ratio_map.get(compression_setting, "?")
+
 def disable_agc_and_set_gain():
     with SMBus(I2C_BUS) as bus:
-        # Disable AGC
-        bus.write_byte_data(TPA2016_I2C_ADDR, AGC_ENABLE_REGISTER, 0)
-        print("AGC disabled.")
-        # Set fixed gain
-        gain_value = db_to_regval(FIXED_GAIN_DB)
+        gain_value = db_to_regval(current_gain_db)
         bus.write_byte_data(TPA2016_I2C_ADDR, GAIN_REGISTER, gain_value)
-        print(f"Fixed gain set to {FIXED_GAIN_DB} dB (reg value {gain_value})")
+        # Don't overwrite register 0x07, just re-set compression bits
+        val = bus.read_byte_data(TPA2016_I2C_ADDR, COMPRESS_REGISTER)
+        val = (val & 0xFC) | (compression_setting & 0x03)
+        bus.write_byte_data(TPA2016_I2C_ADDR, COMPRESS_REGISTER, val)
+        print(f"Fixed gain set to {current_gain_db} dB (reg value {gain_value})")
+        print(f"Compression ratio re-applied: {get_current_compression_label()}, reg 0x07 = 0x{val:02X}")
 
 # ========== HARDWARE MUTE (SHDN) ==========
 def mute_amp():
@@ -63,18 +111,31 @@ def sws_software_unmute():
         print("SWS Software Shutdown: OFF (unmuted)")
     disable_agc_and_set_gain()  # Re-assert settings just in case
 
-# ========== VOLUME ==========
+# ========== ALSA VOLUME ==========
+def get_current_volume():
+    try:
+        import re
+        result = subprocess.check_output(["amixer", "get", "Master"], encoding="utf-8")
+        matches = re.findall(r"\[(\d+)%\]", result)
+        if matches:
+            return matches[-1] + "%"
+    except Exception as e:
+        return "Unknown"
+    return "Unknown"
+
 def volume_up():
     try:
         subprocess.run(['/usr/bin/amixer', '-q', '-c', '0', 'sset', 'Master', '5+', 'unmute'])
-        print("Volume UP")
+        vol = get_current_volume()
+        print(f"Volume UP, now at {vol}")
     except Exception as e:
         print(f"Volume UP error: {e}")
 
 def volume_down():
     try:
         subprocess.run(['/usr/bin/amixer', '-q', '-c', '0', 'sset', 'Master', '5-', 'unmute'])
-        print("Volume DOWN")
+        vol = get_current_volume()
+        print(f"Volume DOWN, now at {vol}")
     except Exception as e:
         print(f"Volume DOWN error: {e}")
 
@@ -87,18 +148,20 @@ def key_pressed():
 
 # ========== KEYBOARD TEST MODE ==========
 def keyboard_mode():
+    global current_gain_db, compression_setting
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(SHDN_GPIO, GPIO.OUT, initial=GPIO.HIGH)
     GPIO.setup(JACK_SWITCH_GPIO, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
     print("Keyboard test mode enabled.")
-    print("Press 'u' for Volume Up, 'd' for Volume Down, 'm' for HW mute toggle (SHDN), 'b' for BOTH buttons (HW mute), 's' for SWS software mute toggle, 'q' to quit.")
+    print("Press 'u' for Volume Up, 'd' for Volume Down, 'm' for HW mute toggle (SHDN), 'b' for BOTH buttons (HW mute), 's' for SWS software mute toggle, '+' to increase gain, '-' to decrease gain, 'c' to toggle compression, 'q' to quit.")
+    print(f"Initial fixed gain: {current_gain_db} dB")
+    print(f"Initial compression ratio: {get_current_compression_label()}")
     amp_muted = False
     amp_sws_muted = False
     jack_inserted = False
     try:
         while True:
-            # Auto mute/unmute on headphone plug (hardware mute)
             jack_state = GPIO.input(JACK_SWITCH_GPIO)
             if jack_state == 0 and not jack_inserted:
                 print("Headphone plugged in: muting speakers (HW)")
@@ -133,6 +196,18 @@ def keyboard_mode():
                     else:
                         sws_software_mute()
                         amp_sws_muted = True
+                elif key == '+':
+                    if current_gain_db < 30:
+                        set_fixed_gain_db(current_gain_db + 1)
+                    else:
+                        print("Gain already at maximum (+30 dB)")
+                elif key == '-':
+                    if current_gain_db > -28:
+                        set_fixed_gain_db(current_gain_db - 1)
+                    else:
+                        print("Gain already at minimum (-28 dB)")
+                elif key == 'c':
+                    toggle_compression()
                 elif key == 'q':
                     print("Exiting keyboard test mode.")
                     break
@@ -205,6 +280,8 @@ def gpio_mode():
 
 # ========== MAIN ==========
 if __name__ == "__main__":
+    current_gain_db = FIXED_GAIN_DB
+    compression_setting = COMPRESSION_1TO1
     disable_agc_and_set_gain()  # At startup
 
     if sys.stdin.isatty():
@@ -216,7 +293,6 @@ if __name__ == "__main__":
             print("\nNOTE: SHDN_GPIO is currently set to GPIO 16 (change back to 22 later!)\n")
             gpio_mode()
     else:
-        # If running as a systemd service, default to GPIO mode
         print("No terminal detected, running in GPIO mode (systemd service).")
         print("\nNOTE: SHDN_GPIO is currently set to GPIO 16 (change back to 22 later!)\n")
         gpio_mode()
