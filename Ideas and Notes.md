@@ -129,4 +129,4 @@ Blue = 4,700 Ω
 
 Red = 2,200 Ω
 
-This may differ when I try 3mm ones. Or I could do RGB using a software PWM
+This may differ when I try 3mm ones. Or I could do RGB using a software PWM and a 4-pin RGB LED.
