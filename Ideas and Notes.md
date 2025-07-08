@@ -116,3 +116,17 @@ Do I even need more than one?
 - Loading roms over USB
 - Secondary controllers? 
 - Internal hub (adafruit breakout board) with an externally accessible port or two?
+
+
+
+**Status LEDs**
+
+(Tested with adafruit 5mm LEDs https://www.adafruit.com/product/4203)
+
+Green = 220 Ω
+
+Blue = 4,700 Ω
+
+Red = 2,200 Ω
+
+This may differ when I try 3mm ones. Or I could do RGB using a software PWM
