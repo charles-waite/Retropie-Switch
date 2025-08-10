@@ -54,43 +54,19 @@ All hardware and software designs are eventually intended to be open-sourced for
 - Switch Joycon rails (or donor Joycon charger for rails/connector)
 - Joycons
 - Tiny stereo speakers
-- Mini DAC (wired to GPIO header)
+- Mini DAC (generic PCM5102A variant)
 - Small hardware buttons (power, volume, etc.)
-- USB-C connector
-- Small-gauge wire and solder
+- USB-C charging input relocated/extended from PiSugar
 - Liquid flux
-- [Molex 5034801000 connector](https://www.digikey.com/en/products/detail/molex/5034801000/2356624) (for Joycon rails)
-- [Molex 15020/15120 ribbon cable](https://www.digikey.com/en/products/filter/flat-flex-ribbon-jumpers-cables/457) (for Joycon rail connection)
 
 ---
 
 ## Case & Design Notes
 
 - Custom 3D-printed, clamshell design in two layers (screen bezel, rear case)
-- Removable panel for Raspberry Pi access
 - Mounts for all internal components (speakers, amp, DAC, buttons, USB, Joycon rails)
-- Gasket/adhesive for clean fit to screen
+- Foam or adhesive for clean fit to screen
 - Mounts directly to LCD panel studs for a robust build
-- Space reserved for audio amp, DAC, and cable routing
-- Joycon rails wired to charge Joycons, with custom flat-flex ribbon cables
-- Slot design for routing ribbon cables from rails through the case
-
----
-
-## Joycon Rail Connector
-
-**Rail-side connector:**  
-- Pitch: 0.5mm  
-- [Molex 5034801000](https://www.digikey.com/en/products/detail/molex/5034801000/2356624)  
-- Flat-flex cable options: [Molex 15020 (top pads)](https://www.digikey.com/en/products/filter/flat-flex-ribbon-jumpers-cables/457?s=N4IgjCBcoBwJxVAYygMwIYBsDOBTANCAPZQDaIArAExhUgC6hADgC5QgDKLATgJYB2AcxABfQlQoxEIFJAw4CxMiAAsYAMwwAbAHYGzNpE48BwseAAM1abPl5CJSOVpgVF-SFbsufIaPFgWlo2aFj2Sk6WHl5GACJEAK4ARpi4-iAAtBDQMqEKDspU6gzmGSohcmGKjuTqrlTu9CLNQA) or [Molex 15120 (bottom pads)](https://www.digikey.com/en/products/filter/flat-flex-ribbon-jumpers-cables/457?s=N4IgjCBcoBwJxVAYygMwIYBsDOBTANCAPZQDaIArAExhUgC6hADgC5QgDKLATgJYB2AcxABfQlQoxEIFJAw4CxMiAAsYAMwwAbAHYGzNpE48BwseAAM1abPl5CJSOVpgVF-SFbsufIaPFgWlo2aFj2Sk6WHl5GACJEAK4ARpi4-iAAtBDQMqEKDspU6gzmGSohcmGKjs5gOhrF9CLNQA)
-
-**Mounting plan:**  
-1. Desolder original rail connector from donor board/cable.  
-2. Solder original rail connector to Molex flat-flex cable.  
-3. Solder new Molex connector to original cable.  
-4. Route flat cable through case to Joycon controller board location.  
-5. Slot designed in case for cable routing.  
-6. Test fit required to determine correct pad orientation.
 
 ---
 
@@ -101,7 +77,6 @@ All hardware and software designs are eventually intended to be open-sourced for
 - [ ] **Integrate buttons** for volume, power, etc.
 - [ ] **Upgrade to PiSugar 3 Plus** for power management
 - [ ] **Add internal USB hub** (minimum 3 ports: 2 external, 1 internal for Joycons)
-- [ ] **Install header shim** for extra GPIO connectivity
 - [ ] **Optimize DAC mounting** for durability and space
 - [ ] **Setup & test volume/mute buttons**, with auto-mute on headphone insertion
 - [ ] **Setup backlight control script**, test with Joycons
@@ -112,7 +87,9 @@ All hardware and software designs are eventually intended to be open-sourced for
     - [ ] Includes update script for pulling changes & restarting services
 - [ ] **Refactor scripts** to use Adafruit libraries for reliability
 - [ ] **Determine ribbon cable orientation for Joycon rails**
-- [ ] **Design ribbon cable slot in case**
+- [x] **Design Joycon Rail cable extender and breakout board variants**
+- [ ] **Design custom slider rails using a 4-pin connector to carry VIN/GND + I2C signal**
+	- 	Could use a Magnetic "MagSafe" style plug, USB-C plugs, or something like a card edge connector.
 
 ---
 
@@ -187,7 +164,6 @@ All hardware and software designs are eventually intended to be open-sourced for
 ## Acknowledgments
 
 - Inspired by the Nintendo Switch, RetroPie, and countless open-source handheld projects
-- Hardware inspiration and code snippets from [danielfreer/raspberrypi5-retropie-setup](https://github.com/danielfreer/raspberrypi5-retropie-setup) and Adafruit Pi hardware guides
 
 ---
 
@@ -199,7 +175,7 @@ All hardware and software designs are eventually intended to be open-sourced for
 
 ## Contact
 
-Project lead: *[Add your name or alias here]*  
-For questions, suggestions, or to get involved, open an issue or contact via GitHub.
+Project lead: charles-waite  
+For questions, suggestions, or to get involved, open an issue.
 
 ---
