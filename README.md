@@ -61,6 +61,14 @@ All hardware and software designs are eventually intended to be open-sourced for
 
 ---
 
+## Progress pictures
+
+![Display Stand Side](resources/Display stand Side.jpeg =400x)
+![Board Sandwich](resources/Board sandwich - Display, PiSugar, Pi 3A+.jpeg =400x)
+
+
+---
+
 ## Case & Design Notes
 
 - Custom 3D-printed, clamshell design in two layers (screen bezel, rear case)
