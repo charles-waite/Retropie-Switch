@@ -63,8 +63,8 @@ All hardware and software designs are eventually intended to be open-sourced for
 
 ## Progress pictures
 
-![Display Stand Side](/resources/Display stand Side.jpeg)
-![Board Sandwich](/resources/Board sandwich - Display, PiSugar, Pi 3A+.jpeg)
+![Display Stand Side](/resources/Display-Stand-Side.jpeg)
+![Board Sandwich](resources/Board-Sandwich-Display-PiSugar-Pi-3A+.jpeg)
 
 
 ---
