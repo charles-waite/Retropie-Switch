@@ -1,0 +1,35 @@
+Side,Control,Pad Role,ItsyBitsy Pin
+Both,Common Ground Bus,GND,GND
+Both,3.3V Rail (sticks + triggers),VCC,3V
+Left,D‑Pad Up,Signal,D2
+Left,D‑Pad Down,Signal,SCK
+Left,D‑Pad Left,Signal,MOSI
+Left,D‑Pad Right,Signal,D11
+Left,BT‑ShoulderLeft (LB),Signal,D12
+Left,BT‑Select,Signal,D13
+Left,Joystick‑Left X,Wiper,A2
+Left,Joystick‑Left X,VCC,3V
+Left,Joystick‑Left X,GND,GND
+Left,Joystick‑Left Y,Wiper,A1
+Left,Joystick‑Left Y,VCC,3V
+Left,Joystick‑Left Y,GND,GND
+Left,L3 (Stick Click Left),Signal,MISO
+Left,Trigger‑Left (LT),Wiper,A0
+Left,Trigger‑Left (LT),VCC,3V
+Left,Trigger‑Left (LT),GND,GND
+Right,BT‑A,Signal,D1
+Right,BT‑B,Signal,D9
+Right,BT‑X,Signal,D4
+Right,BT‑Y,Signal,D7
+Right,BT‑ShoulderRight (RB),Signal,D10
+Right,BT‑Start,Signal,D0
+Right,Joystick‑Right X,Wiper,A5
+Right,Joystick‑Right X,VCC,3V
+Right,Joystick‑Right X,GND,GND
+Right,Joystick‑Right Y,Wiper,A4
+Right,Joystick‑Right Y,VCC,3V
+Right,Joystick‑Right Y,GND,GND
+Right,R3 (Stick Click Right),Signal,D3
+Right,Trigger‑Right (RT),Wiper,A3
+Right,Trigger‑Right (RT),VCC,3V
+Right,Trigger‑Right (RT),GND,GND
