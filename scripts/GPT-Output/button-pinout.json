@@ -1,0 +1,29 @@
+//Here you can configure the buttons, joystick axes, and trigger axes. Main.py reads this file to setup button pin assignments.
+{
+  "buttons": {
+    "A": "D9",
+    "B": "D10",
+    "X": "D11",
+    "Y": "D12",
+    "LB": "D6",
+    "RB": "D13",
+    "Start": "D8",
+    "Select": "D7",
+    "L3": "D0",
+    "R3": "D1"
+  },
+  "dpad": {
+    "Up": "D2",
+    "Down": "D3",
+    "Left": "MOSI (D4)",
+    "Right": "D5"
+  },
+  "axes": {
+    "LX": "A0",
+    "LY": "A1",
+    "RX": "A2",
+    "RY": "A3",
+    "LT": "A4",
+    "RT": "A5"
+  }
+}

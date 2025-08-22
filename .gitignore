@@ -1,7 +1,7 @@
 .DS_Store
 *.sublime-workspace
 *.sublime-project
-GPT-Output/
+#GPT-Output/
 *.numbers
 *.afdesign
 *.fzz
