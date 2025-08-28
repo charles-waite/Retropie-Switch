@@ -1,14 +1,26 @@
-//EXAMPLE CONFIG FOR CUSTOM JOYSTICK BEHAVIOR
+// Controller behavior tuning
 {
   "invert": {
-    "LY": false,
-    "RY": false
+    "LX": false,
+    "LY": true,
+    "RX": false,
+    "RY": true,
+    "LT": false,
+    "RT": false
   },
   "deadzone": {
     "LX": 12,
     "LY": 12,
     "RX": 12,
     "RY": 12
+  },
+  "smoothing": {
+    "LX": 0.2,
+    "LY": 0.2,
+    "RX": 0.2,
+    "RY": 0.2,
+    "LT": 0.1,
+    "RT": 0.1
   },
   "triggers": {
     "LT_min": 24,
