@@ -5,13 +5,18 @@
 #   - config.json          (invert, deadzone, smoothing, trigger calibration)
 #
 # Design:
-#   - Buttons & D-pad: event-driven via keypad.Keys (less USB chatter, built-in debounce)
-#   - Sticks + triggers: polled analog (continuous), then tuned by config and packed into HID
-#   - Axes are sent as 8-bit (0..255) values to match the 1-byte-per-axis HID descriptor
+#  - Buttons & D-pad: event-driven via keypad.Keys (less USB chatter, built-in debounce)
+#  - Sticks + triggers: polled analog (continuous), then tuned by config and packed into HID
+#  - Axes are sent as 8-bit (0..255) values to match the 1-byte-per-axis HID descriptor
 
-import time, json, board, analogio, usb_hid, keypad
+import time
+import json
+import board
+import analogio
+import usb_hid
+import keypad
 
-PINS_FILE   = "button-pinout.json"
+PINS_FILE = "button-pinout.json"
 CONFIG_FILE = "config.json"
 
 # ---------- JSON loader (supports // comments) ----------
@@ -27,12 +32,13 @@ def load_json(path, default=None):
     except Exception:
         return default
 
+
 # ---------- Pin resolver ("MOSI (D4)" -> D4, etc.) ----------
 def resolve_pin(label: str):
     label = (label or "").strip()
     # Allow forms like "MOSI (D4)" -> prefer inner D4 if present
     if "(" in label and ")" in label:
-        inner = label[label.find("(")+1:label.find(")")]
+        inner = label[label.find("(") + 1 : label.find(")")]
         if inner in dir(board):
             return getattr(board, inner)
     # Direct names like "D9", "A0"
@@ -40,20 +46,21 @@ def resolve_pin(label: str):
         return getattr(board, label)
     raise ValueError("Unknown pin label: " + label)
 
+
 # ---------- Load mapping & config ----------
 mapping = load_json(PINS_FILE)
 assert mapping is not None, f"{PINS_FILE} not found or invalid"
 
-config   = load_json(CONFIG_FILE, default={})
-INVERT   = config.get("invert",   {})   # e.g. {"LY": true, "RY": true}
-DEADZONE = config.get("deadzone", {})   # raw 0..255 delta around 128
-SMOOTH   = config.get("smoothing", {})  # 0.0..1.0 per axis
-TRIG     = config.get("triggers", {})   # {LT_min, LT_max, RT_min, RT_max}
+config = load_json(CONFIG_FILE, default={})
+INVERT = config.get("invert", {})  # e.g. {"LY": true, "RY": true}
+DEADZONE = config.get("deadzone", {})  # raw 0..255 delta around 128
+SMOOTH = config.get("smoothing", {})  # 0.0..1.0 per axis
+TRIG = config.get("triggers", {})  # {LT_min, LT_max, RT_min, RT_max}
 
 # Deterministic host button order (typical Xbox-like expectation)
-BUTTON_ORDER = ["A","B","X","Y","LB","RB","Start","Select","L3","R3"]
+BUTTON_ORDER = ["A", "B", "X", "Y", "LB", "RB", "Start", "Select", "L3", "R3"]
 button_names = [nm for nm in BUTTON_ORDER if nm in mapping["buttons"]]
-button_pins  = [resolve_pin(mapping["buttons"][nm]) for nm in button_names]
+button_pins = [resolve_pin(mapping["buttons"][nm]) for nm in button_names]
 
 # D-pad (Up, Down, Left, Right) — each is its own input, mapped to an 8-way hat
 dpad_pins = [
@@ -65,7 +72,7 @@ dpad_pins = [
 
 # ---------- Hardware setup ----------
 buttons = keypad.Keys(button_pins, value_when_pressed=False, pull=True)
-dpad    = keypad.Keys(dpad_pins,  value_when_pressed=False, pull=True)
+dpad = keypad.Keys(dpad_pins, value_when_pressed=False, pull=True)
 
 axes_pins = {ax: resolve_pin(mapping["axes"][ax]) for ax in mapping["axes"]}
 lx = analogio.AnalogIn(axes_pins["LX"])
@@ -85,7 +92,8 @@ assert gamepad, "No custom HID gamepad found (check boot.py)"
 
 # ---------- Helpers ----------
 AXIS_STATE = {}  # stores last smoothed value per axis (for low-pass)
-CENTER = 128     # center for 8-bit axes
+CENTER = 128  # center for 8-bit axes
+
 
 def read_axis(adc, name):
     # NOTE: AnalogIn.value is always 16-bit (0..65535) regardless of MCU ADC resolution.
@@ -97,13 +105,15 @@ def read_axis(adc, name):
         raw = 255 - raw
 
     # Trigger calibration (map [min..max] -> [0..255])
-    if name in ("LT","RT"):
+    if name in ("LT", "RT"):
         minv = TRIG.get(f"{name}_min", 0)
         maxv = TRIG.get(f"{name}_max", 255)
         span = max(1, (maxv - minv))
         raw = int((raw - minv) * 255 / span)
-        if raw < 0:   raw = 0
-        if raw > 255: raw = 255
+        if raw < 0:
+            raw = 0
+        if raw > 255:
+            raw = 255
 
     # Deadzone (sticks typically): clamp to center if within threshold
     dz = DEADZONE.get(name, None)
@@ -117,21 +127,32 @@ def read_axis(adc, name):
     AXIS_STATE[name] = val
     return val
 
-def compute_hat(u,d,l,r):
+
+def compute_hat(u, d, l, r):
     # 0=U,1=UR,2=R,3=DR,4=D,5=DL,6=L,7=UL,8=center
-    if u and not d and not l and not r: return 0
-    if u and not d and not l and r:     return 1
-    if not u and not d and not l and r: return 2
-    if not u and d and not l and r:     return 3
-    if not u and d and not l and not r: return 4
-    if not u and d and l and not r:     return 5
-    if not u and not d and l and not r: return 6
-    if u and not d and l and not r:     return 7
+    if u and not d and not l and not r:
+        return 0
+    if u and not d and not l and r:
+        return 1
+    if not u and not d and not l and r:
+        return 2
+    if not u and d and not l and r:
+        return 3
+    if not u and d and not l and not r:
+        return 4
+    if not u and d and l and not r:
+        return 5
+    if not u and not d and l and not r:
+        return 6
+    if u and not d and l and not r:
+        return 7
     return 8
+
 
 # ---------- State & report ----------
 button_bits = 0
 hat = 8  # neutral
+
 
 def send_report():
     # Pack 9-byte report to match boot.py descriptor:
@@ -148,6 +169,7 @@ def send_report():
     report[8] = read_axis(rt, "RT")
     gamepad.send_report(report)
 
+
 # ---------- Main loop ----------
 while True:
     # Buttons (event-driven): update bitfield only on changes
@@ -162,10 +184,10 @@ while True:
         ev = buttons.events.get()
 
     # D-pad: sample continuously to allow diagonals
-    up    = (not dpad.keys[0].value)
-    down  = (not dpad.keys[1].value)
-    left  = (not dpad.keys[2].value)
-    right = (not dpad.keys[3].value)
+    up = not dpad.keys[0].value
+    down = not dpad.keys[1].value
+    left = not dpad.keys[2].value
+    right = not dpad.keys[3].value
     new_hat = compute_hat(up, down, left, right)
     if new_hat != hat:
         hat = new_hat
